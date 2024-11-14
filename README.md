@@ -11,7 +11,7 @@ This is a code base developed for reference and tutorial/teaching purposes. It i
 
 3. Eigen
 
-4. Ceres: he VINS initialization part uses Ceres for Structure from Motion (SfM), so we still need to rely on Ceres.
+4. Ceres: The VINS initialization part uses Ceres for Structure from Motion (SfM), so we still need to rely on Ceres.
 
 ### Compiling the Code
 
@@ -31,7 +31,7 @@ cd build
 ../bin/testCurveFitting 
 ```
 
-#### 2. VINs-Mono on Euroc Dataset
+#### 2. VINS-Mono on Euroc Dataset
 ```c++
 cd build
 ../bin/run_euroc /home/dataset/EuRoC/MH-05/mav0/ ../config/
