@@ -1,0 +1,89 @@
+%YAML:1.0
+
+# Common Parameters
+# General settings for the IMU and camera topics, and output path
+imu_topic: "/imu0"               # Topic for IMU data
+image_topic: "/cam0/image_raw"    # Topic for raw image data
+output_path: "/home/vslam/"       # Path where output data will be stored
+
+# Camera Calibration Parameters
+# Camera model and intrinsic parameters for calibration
+model_type: PINHOLE               # Camera model type (PINHOLE, FISHEYE, etc.)
+camera_name: camera               # Name of the camera
+image_width: 752                  # Image width in pixels
+image_height: 480                 # Image height in pixels
+distortion_parameters:           # Distortion parameters for the camera
+   k1: -2.917e-01                 # Radial distortion coefficient
+   k2: 8.228e-02                  # Radial distortion coefficient
+   p1: 5.333e-05                  # Tangential distortion coefficient
+   p2: -1.578e-04                 # Tangential distortion coefficient
+projection_parameters:           # Projection (intrinsic) parameters
+   fx: 4.616e+02                  # Focal length in x-direction (in pixels)
+   fy: 4.603e+02                  # Focal length in y-direction (in pixels)
+   cx: 3.630e+02                  # Principal point in x-direction (in pixels)
+   cy: 2.481e+02                  # Principal point in y-direction (in pixels)
+
+# Extrinsic Parameters between IMU and Camera
+# This section deals with the extrinsic parameters, i.e., the relationship between the IMU and camera frames.
+estimate_extrinsic: 0             # 0: Use accurate extrinsic parameters. 1: Use an initial guess and optimize. 2: Automatically calibrate (if no knowledge of extrinsics)
+# If estimate_extrinsic is 0 or 1, the following matrices must be specified.
+extrinsicRotation: !!opencv-matrix   # Rotation matrix from camera frame to IMU frame
+   rows: 3
+   cols: 3
+   dt: d
+   data: [0.0148655429818, -0.999880929698, 0.00414029679422,
+          0.999557249008, 0.0149672133247, 0.025715529948, 
+          -0.0257744366974, 0.00375618835797, 0.999660727178]
+
+extrinsicTranslation: !!opencv-matrix  # Translation vector from camera frame to IMU frame
+   rows: 3
+   cols: 1
+   dt: d
+   data: [-0.0216401454975, -0.064676986768, 0.00981073058949]
+
+# Front-End Feature Tracking Parameters
+# Parameters for feature tracking
+max_cnt: 150             # Maximum number of features to track
+min_dist: 30             # Minimum distance between two features
+freq: 10                 # Frequency of publishing tracking results (Hz). At least 10Hz for good estimation. 0 means the frequency matches raw image rate
+F_threshold: 1.0         # RANSAC threshold for feature tracking (in pixels)
+show_track: 1            # Whether to publish tracking images as a topic
+equalize: 1              # If the image is too dark or light, enable equalization to find more features
+fisheye: 0               # If the camera is fisheye, set to 1. A circle mask will be applied to remove edge noise.
+
+# Back-End Optimization Algorithm Parameters
+# Parameters for optimization
+max_solver_time: 0.04   # Maximum solver iteration time (in milliseconds) to ensure real-time performance
+max_num_iterations: 8   # Maximum number of solver iterations
+keyframe_parallax: 10.0 # Parallax threshold for selecting keyframes (in pixels)
+
+# IMU Parameters
+# Parameters for IMU, the more accurate the values, the better the performance
+acc_n: 0.08             # Accelerometer measurement noise standard deviation (m/s²)
+gyr_n: 0.004            # Gyroscope measurement noise standard deviation (rad/s)
+acc_w: 0.00004          # Accelerometer bias random walk noise standard deviation (m/s²)
+gyr_w: 2.0e-6           # Gyroscope bias random walk noise standard deviation (rad/s)
+g_norm: 9.81007         # Gravitational acceleration (m/s²)
+
+# Loop Closure Parameters
+# Parameters for loop closure detection
+loop_closure: 0                    # Enable loop closure detection (1: Enabled, 0: Disabled)
+load_previous_pose_graph: 0        # Load and reuse a previous pose graph (if available)
+fast_relocalization: 0             # Enable fast relocalization for large or real-time projects
+pose_graph_save_path: "/home/vslam" # Path to save/load the pose graph
+
+# Image and IMU Timestamp Synchronization
+# Parameters to account for unsynchronized timestamps between camera and IMU
+estimate_td: 0                      # Estimate the time offset between camera and IMU timestamps online (1: Enabled, 0: Disabled)
+td: 0.0                             # Initial value of the time offset (in seconds). Corrected image time = image clock + td
+
+# Rolling Shutter Parameters
+# Parameters specific to cameras with rolling shutters
+rolling_shutter: 0                  # 0: Global shutter camera, 1: Rolling shutter camera
+rolling_shutter_tr: 0               # Rolling shutter read-out time per frame (in seconds)
+
+# Visualization Parameters
+# Parameters for visualization and saving images for debug purposes
+save_image: 0                       # Save images in the pose graph for visualization (0: Disabled)
+visualize_imu_forward: 0            # Output IMU forward propagation for low latency and high-frequency results
+visualize_camera_size: 0.4          # Size of the camera marker in RVIZ (for visualization)
