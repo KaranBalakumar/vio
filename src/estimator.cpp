@@ -695,13 +695,13 @@ void Estimator::MargOldFrame()
     backend::LossFunction *lossfunction;
     lossfunction = new backend::CauchyLoss(1.0);
 
-    // step1. 构建 problem
+    // step1. Build problem
     backend::Problem problem(backend::Problem::ProblemType::SLAM_PROBLEM);
     vector<shared_ptr<backend::VertexPose>> vertexCams_vec;
     vector<shared_ptr<backend::VertexSpeedBias>> vertexVB_vec;
     int pose_dim = 0;
 
-    // 先把 外参数 节点加入图优化，这个节点在以后一直会被用到，所以我们把他放在第一个
+    // First add the extrinsic parameter node to graph optimization, this node will be used throughout, so we put it first
     shared_ptr<backend::VertexPose> vertexExt(new backend::VertexPose());
     {
         Eigen::VectorXd pose(7);
@@ -750,7 +750,7 @@ void Estimator::MargOldFrame()
     // Visual Factor
     {
         int feature_index = -1;
-        // 遍历每一个特征
+        // Iterate through each feature
         for (auto &it_per_id : f_manager.feature)
         {
             it_per_id.used_num = it_per_id.feature_per_frame.size();
@@ -771,7 +771,7 @@ void Estimator::MargOldFrame()
             verterxPoint->SetParameters(inv_d);
             problem.AddVertex(verterxPoint);
 
-            // 遍历所有的观测
+            // Iterate through all observations
             for (auto &it_per_frame : it_per_id.feature_per_frame)
             {
                 imu_j++;
@@ -796,16 +796,16 @@ void Estimator::MargOldFrame()
         }
     }
 
-    // 先验
+    // Prior
     {
-        // 已经有 Prior 了
+        // Already have Prior
         if (Hprior_.rows() > 0)
         {
-            problem.SetHessianPrior(Hprior_); // 告诉这个 problem
+            problem.SetHessianPrior(Hprior_); // Tell this problem
             problem.SetbPrior(bprior_);
             problem.SetErrPrior(errprior_);
             problem.SetJtPrior(Jprior_inv_);
-            problem.ExtendHessiansPriorSize(15); // 但是这个 prior 还是之前的维度，需要扩展下装新的pose
+            problem.ExtendHessiansPriorSize(15); // But this prior is still the previous dimension, need to extend to fit new pose
         }
         else
         {
@@ -813,7 +813,7 @@ void Estimator::MargOldFrame()
             Hprior_.setZero();
             bprior_ = VecX(pose_dim);
             bprior_.setZero();
-            problem.SetHessianPrior(Hprior_); // 告诉这个 problem
+            problem.SetHessianPrior(Hprior_); // Tell this problem
             problem.SetbPrior(bprior_);
         }
     }
@@ -830,14 +830,14 @@ void Estimator::MargOldFrame()
 void Estimator::MargNewFrame()
 {
 
-    // step1. 构建 problem
+    // step1. Build problem
     backend::Problem problem(backend::Problem::ProblemType::SLAM_PROBLEM);
     vector<shared_ptr<backend::VertexPose>> vertexCams_vec;
     vector<shared_ptr<backend::VertexSpeedBias>> vertexVB_vec;
     //    vector<backend::Point3d> points;
     int pose_dim = 0;
 
-    // 先把 外参数 节点加入图优化，这个节点在以后一直会被用到，所以我们把他放在第一个
+    // First add the extrinsic parameter node to graph optimization, this node will be used throughout, so we put it first
     shared_ptr<backend::VertexPose> vertexExt(new backend::VertexPose());
     {
         Eigen::VectorXd pose(7);
@@ -868,17 +868,17 @@ void Estimator::MargNewFrame()
         pose_dim += vertexVB->LocalDimension();
     }
 
-    // 先验
+    // Prior
     {
-        // 已经有 Prior 了
+        // Already have Prior
         if (Hprior_.rows() > 0)
         {
-            problem.SetHessianPrior(Hprior_); // 告诉这个 problem
+            problem.SetHessianPrior(Hprior_); // Tell this problem
             problem.SetbPrior(bprior_);
             problem.SetErrPrior(errprior_);
             problem.SetJtPrior(Jprior_inv_);
 
-            problem.ExtendHessiansPriorSize(15); // 但是这个 prior 还是之前的维度，需要扩展下装新的pose
+            problem.ExtendHessiansPriorSize(15); // But this prior is still the previous dimension, need to extend to fit new pose
         }
         else
         {
@@ -890,7 +890,7 @@ void Estimator::MargNewFrame()
     }
 
     std::vector<std::shared_ptr<backend::Vertex>> marg_vertex;
-    // 把窗口倒数第二个帧 marg 掉
+    // Marginalize the second last frame in the window
     marg_vertex.push_back(vertexCams_vec[WINDOW_SIZE - 1]);
     marg_vertex.push_back(vertexVB_vec[WINDOW_SIZE - 1]);
     problem.Marginalize(marg_vertex, pose_dim);
@@ -905,13 +905,13 @@ void Estimator::problemSolve()
     lossfunction = new backend::CauchyLoss(1.0);
     //    lossfunction = new backend::TukeyLoss(1.0);
 
-    // step1. 构建 problem
+    // step1. Build problem
     backend::Problem problem(backend::Problem::ProblemType::SLAM_PROBLEM);
     vector<shared_ptr<backend::VertexPose>> vertexCams_vec;
     vector<shared_ptr<backend::VertexSpeedBias>> vertexVB_vec;
     int pose_dim = 0;
 
-    // 先把 外参数 节点加入图优化，这个节点在以后一直会被用到，所以我们把他放在第一个
+    // First add the extrinsic parameter node to graph optimization, this node will be used throughout, so we put it first
     shared_ptr<backend::VertexPose> vertexExt(new backend::VertexPose());
     {
         Eigen::VectorXd pose(7);
@@ -973,7 +973,7 @@ void Estimator::problemSolve()
     vector<shared_ptr<backend::VertexInverseDepth>> vertexPt_vec;
     {
         int feature_index = -1;
-        // 遍历每一个特征
+        // Iterate through each feature
         for (auto &it_per_id : f_manager.feature)
         {
             it_per_id.used_num = it_per_id.feature_per_frame.size();
@@ -992,7 +992,7 @@ void Estimator::problemSolve()
             problem.AddVertex(verterxPoint);
             vertexPt_vec.push_back(verterxPoint);
 
-            // 遍历所有的观测
+            // Iterate through all observations
             for (auto &it_per_frame : it_per_id.feature_per_frame)
             {
                 imu_j++;
@@ -1017,20 +1017,20 @@ void Estimator::problemSolve()
         }
     }
 
-    // 先验
+    // Prior
     {
-        // 已经有 Prior 了
+        // Already have Prior
         if (Hprior_.rows() > 0)
         {
-            // 外参数先验设置为 0. TODO:: 这个应该放到 solver 里去弄
+            // Extrinsic parameter prior set to 0. TODO:: This should be handled in the solver
             //            Hprior_.block(0,0,6,Hprior_.cols()).setZero();
             //            Hprior_.block(0,0,Hprior_.rows(),6).setZero();
 
-            problem.SetHessianPrior(Hprior_); // 告诉这个 problem
+            problem.SetHessianPrior(Hprior_); // Tell this problem
             problem.SetbPrior(bprior_);
             problem.SetErrPrior(errprior_);
             problem.SetJtPrior(Jprior_inv_);
-            problem.ExtendHessiansPriorSize(15); // 但是这个 prior 还是之前的维度，需要扩展下装新的pose
+            problem.ExtendHessiansPriorSize(15); // But this prior is still the previous dimension, need to extend to fit new pose
         }
     }
 
@@ -1064,7 +1064,7 @@ void Estimator::problemSolve()
         }
     }
 
-    // 遍历每一个特征
+    // Iterate through each feature
     for (int i = 0; i < vertexPt_vec.size(); ++i)
     {
         VecX f = vertexPt_vec[i]->Parameters();
@@ -1075,15 +1075,15 @@ void Estimator::problemSolve()
 void Estimator::backendOptimization()
 {
     TicToc t_solver;
-    // 借助 vins 框架，维护变量
+    // Use VINS framework to maintain variables
     vector2double();
-    // 构建求解器
+    // Build solver
     problemSolve();
-    // 优化后的变量处理下自由度
+    // Handle degrees of freedom for optimized variables
     double2vector();
     //ROS_INFO("whole time for solver: %f", t_solver.toc());
 
-    // 维护 marg
+    // Maintain marginalization
     TicToc t_whole_marginalization;
     if (marginalization_flag == MARGIN_OLD)
     {
@@ -1091,7 +1091,7 @@ void Estimator::backendOptimization()
 
         MargOldFrame();
 
-        std::unordered_map<long, double *> addr_shift; // prior 中对应的保留下来的参数地址
+        std::unordered_map<long, double *> addr_shift; // Parameter addresses corresponding to retained parameters in prior
         for (int i = 1; i <= WINDOW_SIZE; i++)
         {
             addr_shift[reinterpret_cast<long>(para_Pose[i])] = para_Pose[i - 1];

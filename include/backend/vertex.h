@@ -7,75 +7,75 @@ namespace myslam {
 namespace backend {
 extern unsigned long global_vertex_id;
 /**
- * @brief 顶点，对应一个parameter block
- * 变量值以VecX存储，需要在构造时指定维度
+ * @brief Vertex, corresponding to a parameter block
+ * Variable values are stored as VecX, dimension must be specified during construction
  */
 class Vertex {
 public:
     EIGEN_MAKE_ALIGNED_OPERATOR_NEW;
 
     /**
-     * 构造函数
-     * @param num_dimension 顶点自身维度
-     * @param local_dimension 本地参数化维度，为-1时认为与本身维度一样
+     * Constructor
+     * @param num_dimension vertex dimension
+     * @param local_dimension local parameterization dimension, if -1 then same as vertex dimension
      */
     explicit Vertex(int num_dimension, int local_dimension = -1);
 
     virtual ~Vertex();
 
-    /// 返回变量维度
+    /// Return variable dimension
     int Dimension() const;
 
-    /// 返回变量本地维度
+    /// Return variable local dimension
     int LocalDimension() const;
 
-    /// 该顶点的id
+    /// The vertex id
     unsigned long Id() const { return id_; }
 
-    /// 返回参数值
+    /// Return parameter values
     VecX Parameters() const { return parameters_; }
 
-    /// 返回参数值的引用
+    /// Return reference to parameter values
     VecX &Parameters() { return parameters_; }
 
-    /// 设置参数值
+    /// Set parameter values
     void SetParameters(const VecX &params) { parameters_ = params; }
 
-    // 备份和回滚参数，用于丢弃一些迭代过程中不好的估计
+    // Backup and rollback parameters, used to discard bad estimates during iteration
     void BackUpParameters() { parameters_backup_ = parameters_; }
     void RollBackParameters() { parameters_ = parameters_backup_; }
 
-    /// 加法，可重定义
-    /// 默认是向量加
+    /// Addition operation, can be redefined
+    /// Default is vector addition
     virtual void Plus(const VecX &delta);
 
-    /// 返回顶点的名称，在子类中实现
+    /// Return vertex type name, implemented in subclasses
     virtual std::string TypeInfo() const = 0;
 
     int OrderingId() const { return ordering_id_; }
 
     void SetOrderingId(unsigned long id) { ordering_id_ = id; };
 
-    /// 固定该点的估计值
+    /// Fix the estimated value of this vertex
     void SetFixed(bool fixed = true) {
         fixed_ = fixed;
     }
 
-    /// 测试该点是否被固定
+    /// Test if this vertex is fixed
     bool IsFixed() const { return fixed_; }
 
 protected:
-    VecX parameters_;   // 实际存储的变量值
-    VecX parameters_backup_; // 每次迭代优化中对参数进行备份，用于回滚
-    int local_dimension_;   // 局部参数化维度
-    unsigned long id_;  // 顶点的id，自动生成
+    VecX parameters_;   // Actual stored variable values
+    VecX parameters_backup_; // Backup parameters for each iteration, used for rollback
+    int local_dimension_;   // Local parameterization dimension
+    unsigned long id_;  // Vertex id, automatically generated
 
-    /// ordering id是在problem中排序后的id，用于寻找雅可比对应块
-    /// ordering id带有维度信息，例如ordering_id=6则对应Hessian中的第6列
-    /// 从零开始
+    /// Ordering id is the id after sorting in the problem, used to find corresponding Jacobian blocks
+    /// Ordering id contains dimension information, e.g., ordering_id=6 corresponds to the 6th column in Hessian
+    /// Starting from zero
     unsigned long ordering_id_ = 0;
 
-    bool fixed_ = false;    // 是否固定
+    bool fixed_ = false;    // Whether it is fixed
 };
 
 }

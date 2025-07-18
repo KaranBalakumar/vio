@@ -24,12 +24,12 @@ class Problem {
 public:
 
     /**
-     * 问题的类型
-     * SLAM问题还是通用的问题
+     * Problem type
+     * SLAM problem or general problem
      *
-     * 如果是SLAM问题那么pose和landmark是区分开的，Hessian以稀疏方式存储
-     * SLAM问题只接受一些特定的Vertex和Edge
-     * 如果是通用问题那么hessian是稠密的，除非用户设定某些vertex为marginalized
+     * If it's a SLAM problem, then pose and landmark are separated, Hessian is stored in sparse form
+     * SLAM problem only accepts certain specific Vertex and Edge types
+     * If it's a general problem, then hessian is dense, unless user sets certain vertices as marginalized
      */
     enum class ProblemType {
         SLAM_PROBLEM,
@@ -55,19 +55,19 @@ public:
     bool RemoveEdge(std::shared_ptr<Edge> edge);
 
     /**
-     * 取得在优化中被判断为outlier部分的边，方便前端去除outlier
+     * Get edges that are judged as outliers during optimization, convenient for frontend to remove outliers
      * @param outlier_edges
      */
     void GetOutlierEdges(std::vector<std::shared_ptr<Edge>> &outlier_edges);
 
     /**
-     * 求解此问题
+     * Solve this problem
      * @param iterations
      * @return
      */
     bool Solve(int iterations = 10);
 
-    /// 边缘化一个frame和以它为host的landmark
+    /// Marginalize a frame and landmarks hosted by it
     bool Marginalize(std::shared_ptr<Vertex> frameVertex,
                      const std::vector<std::shared_ptr<Vertex>> &landmarkVerticies);
 
@@ -91,80 +91,80 @@ public:
 
 private:
 
-    /// Solve的实现，解通用问题
+    /// Implementation of Solve, solve general problem
     bool SolveGenericProblem(int iterations);
 
-    /// Solve的实现，解SLAM问题
+    /// Implementation of Solve, solve SLAM problem
     bool SolveSLAMProblem(int iterations);
 
-    /// 设置各顶点的ordering_index
+    /// Set ordering_index for each vertex
     void SetOrdering();
 
     /// set ordering for new vertex in slam problem
     void AddOrderingSLAM(std::shared_ptr<Vertex> v);
 
-    /// 构造大H矩阵
+    /// Construct big H matrix
     void MakeHessian();
 
-    /// schur求解SBA
+    /// schur solve SBA
     void SchurSBA();
 
-    /// 解线性方程
+    /// Solve linear system
     void SolveLinearSystem();
 
-    /// 更新状态变量
+    /// Update state variables
     void UpdateStates();
 
-    void RollbackStates(); // 有时候 update 后残差会变大，需要退回去，重来
+    void RollbackStates(); // Sometimes after update residual becomes larger, need to rollback and retry
 
-    /// 计算并更新Prior部分
+    /// Compute and update Prior part
     void ComputePrior();
 
-    /// 判断一个顶点是否为Pose顶点
+    /// Determine if a vertex is a Pose vertex
     bool IsPoseVertex(std::shared_ptr<Vertex> v);
 
-    /// 判断一个顶点是否为landmark顶点
+    /// Determine if a vertex is a landmark vertex
     bool IsLandmarkVertex(std::shared_ptr<Vertex> v);
 
-    /// 在新增顶点后，需要调整几个hessian的大小
+    /// After adding new vertex, need to adjust the size of several hessians
     void ResizePoseHessiansWhenAddingPose(std::shared_ptr<Vertex> v);
 
-    /// 检查ordering是否正确
+    /// Check if ordering is correct
     bool CheckOrdering();
 
     void LogoutVectorSize();
 
-    /// 获取某个顶点连接到的边
+    /// Get edges connected to a certain vertex
     std::vector<std::shared_ptr<Edge>> GetConnectedEdges(std::shared_ptr<Vertex> vertex);
 
     /// Levenberg
-    /// 计算LM算法的初始Lambda
+    /// Compute initial Lambda for LM algorithm
     void ComputeLambdaInitLM();
 
-    /// Hessian 对角线加上或者减去  Lambda
+    /// Add or subtract Lambda to Hessian diagonal
     void AddLambdatoHessianLM();
 
     void RemoveLambdaHessianLM();
 
-    /// LM 算法中用于判断 Lambda 在上次迭代中是否可以，以及Lambda怎么缩放
+    /// Used in LM algorithm to determine if Lambda worked in last iteration, and how to scale Lambda
     bool IsGoodStepInLM();
 
-    /// PCG 迭代线性求解器
+    /// PCG iterative linear solver
     VecX PCGSolver(const MatXX &A, const VecX &b, int maxIter);
 
     double currentLambda_;
     double currentChi_;
-    double stopThresholdLM_;    // LM 迭代退出阈值条件
-    double ni_;                 //控制 Lambda 缩放大小
+    double stopThresholdLM_;    // LM iteration exit threshold condition
+    double ni_;                 // Control Lambda scaling size
 
     ProblemType problemType_;
 
-    /// 整个信息矩阵
+    /// Entire information matrix
     MatXX Hessian_;
     VecX b_;
     VecX delta_x_;
 
-    /// 先验部分信息
+    /// Prior part information
     MatXX H_prior_;
     VecX b_prior_;
     VecX b_prior_backup_;
@@ -173,10 +173,10 @@ private:
     MatXX Jt_prior_inv_;
     VecX err_prior_;
 
-    /// SBA的Pose部分
+    /// SBA Pose part
     MatXX H_pp_schur_;
     VecX b_pp_schur_;
-    // Heesian 的 Landmark 和 pose 部分
+    // Hessian Landmark and pose parts
     MatXX H_pp_;
     VecX b_pp_;
     MatXX H_ll_;
@@ -188,15 +188,15 @@ private:
     /// all edges
     HashEdge edges_;
 
-    /// 由vertex id查询edge
+    /// Query edge by vertex id
     HashVertexIdToEdge vertexToEdge_;
 
     /// Ordering related
     ulong ordering_poses_ = 0;
     ulong ordering_landmarks_ = 0;
     ulong ordering_generic_ = 0;
-    std::map<unsigned long, std::shared_ptr<Vertex>> idx_pose_vertices_;        // 以ordering排序的pose顶点
-    std::map<unsigned long, std::shared_ptr<Vertex>> idx_landmark_vertices_;    // 以ordering排序的landmark顶点
+    std::map<unsigned long, std::shared_ptr<Vertex>> idx_pose_vertices_;        // Pose vertices sorted by ordering
+    std::map<unsigned long, std::shared_ptr<Vertex>> idx_landmark_vertices_;    // Landmark vertices sorted by ordering
 
     // verticies need to marg. <Ordering_id_, Vertex>
     HashVertex verticies_marg_;

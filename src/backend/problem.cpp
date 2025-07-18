@@ -311,17 +311,17 @@ bool Problem::Solve(int iterations)
 void Problem::SetOrdering()
 {
 
-    // 每次重新计数
+    // Recount each time
     ordering_poses_ = 0;
     ordering_generic_ = 0;
     ordering_landmarks_ = 0;
 
-    // Note:: verticies_ 是 map 类型的, 顺序是按照 id 号排序的
+    // Note:: verticies_ is a map type, order is sorted by id number
     for (auto vertex : verticies_)
     {
-        ordering_generic_ += vertex.second->LocalDimension(); // 所有的优化变量总维数
+        ordering_generic_ += vertex.second->LocalDimension(); // Total dimension of all optimization variables
 
-        if (problemType_ == ProblemType::SLAM_PROBLEM) // 如果是 slam 问题，还要分别统计 pose 和 landmark 的维数，后面会对他们进行排序
+        if (problemType_ == ProblemType::SLAM_PROBLEM) // If it's a SLAM problem, also need to separately count pose and landmark dimensions, they will be sorted later
         {
             AddOrderingSLAM(vertex.second);
         }
@@ -329,7 +329,7 @@ void Problem::SetOrdering()
 
     if (problemType_ == ProblemType::SLAM_PROBLEM)
     {
-        // 这里要把 landmark 的 ordering 加上 pose 的数量，就保持了 landmark 在后,而 pose 在前
+        // Here we need to add the pose count to the landmark ordering, keeping landmarks after and poses before
         ulong all_pose_dimension = ordering_poses_;
         for (auto landmarkVertex : idx_landmark_vertices_)
         {
@@ -364,7 +364,7 @@ bool Problem::CheckOrdering()
 void Problem::MakeHessian()
 {
     TicToc t_h;
-    // 直接构造大的 H 矩阵
+    // Directly construct large H matrix
     ulong size = ordering_generic_;
     MatXX H(MatXX::Zero(size, size));
     VecX b(VecX::Zero(size));
@@ -387,13 +387,13 @@ void Problem::MakeHessian()
         {
             auto v_i = verticies[i];
             if (v_i->IsFixed())
-                continue; // Hessian 里不需要添加它的信息，也就是它的雅克比为 0
+                continue; // No need to add its information to Hessian, meaning its Jacobian is 0
 
             auto jacobian_i = jacobians[i];
             ulong index_i = v_i->OrderingId();
             ulong dim_i = v_i->LocalDimension();
 
-            // 鲁棒核函数会修改残差和信息矩阵，如果没有设置 robust cost function，就会返回原来的
+            // Robust kernel function will modify residual and information matrix, if no robust cost function is set, it will return the original
             double drho;
             MatXX robustInfo(edge.second->Information().rows(), edge.second->Information().cols());
             edge.second->RobustInfo(drho, robustInfo);
@@ -413,11 +413,11 @@ void Problem::MakeHessian()
                 assert(v_j->OrderingId() != -1);
                 MatXX hessian = JtW * jacobian_j;
 
-                // 所有的信息矩阵叠加起来
+                // Sum up all information matrices
                 H.block(index_i, index_j, dim_i, dim_j).noalias() += hessian;
                 if (j != i)
                 {
-                    // 对称的下三角
+                    // Symmetric lower triangle
                     H.block(index_j, index_i, dim_j, dim_i).noalias() += hessian.transpose();
                 }
             }
@@ -433,8 +433,8 @@ void Problem::MakeHessian()
         MatXX H_prior_tmp = H_prior_;
         VecX b_prior_tmp = b_prior_;
 
-        /// 遍历所有 POSE 顶点，然后设置相应的先验维度为 0 .  fix 外参数, SET PRIOR TO ZERO
-        /// landmark 没有先验
+        /// Traverse all POSE vertices, then set corresponding prior dimensions to 0. Fix extrinsic parameters, SET PRIOR TO ZERO
+        /// landmark has no prior
         for (auto vertex : verticies_)
         {
             if (IsPoseVertex(vertex.second) && vertex.second->IsFixed())
@@ -484,7 +484,7 @@ void Problem::SolveLinearSystem()
         VecX bpp = b_.segment(0, reserve_size);
         VecX bmm = b_.segment(reserve_size, marg_size);
 
-        // Hmm 是对角线矩阵，它的求逆可以直接为对角线块分别求逆，如果是逆深度，对角线块为1维的，则直接为对角线的倒数，这里可以加速
+        // Hmm is a diagonal matrix, its inverse can be computed directly by inverting diagonal blocks separately. If it's inverse depth, the diagonal block is 1D, then it's directly the reciprocal of the diagonal. This can be accelerated here.
         MatXX Hmm_inv(MatXX::Zero(marg_size, marg_size));
         // TODO:: use openMP
         for (auto landmarkVertex : idx_landmark_vertices_)
@@ -526,7 +526,7 @@ void Problem::UpdateStates()
     // update vertex
     for (auto vertex : verticies_)
     {
-        vertex.second->BackUpParameters(); // 保存上次的估计值
+        vertex.second->BackUpParameters(); // Save last estimate
 
         ulong idx = vertex.second->OrderingId();
         ulong dim = vertex.second->LocalDimension();
@@ -583,7 +583,7 @@ void Problem::ComputeLambdaInitLM()
         currentChi_ += err_prior_.norm();
     currentChi_ *= 0.5;
 
-    stopThresholdLM_ = 1e-10 * currentChi_; // 迭代条件为 误差下降 1e-6 倍
+    stopThresholdLM_ = 1e-10 * currentChi_; // Iteration condition: error reduction by 1e-6 times
 
     double maxDiagonal = 0;
     ulong size = Hessian_.cols();
@@ -613,7 +613,7 @@ void Problem::RemoveLambdaHessianLM()
 {
     ulong size = Hessian_.cols();
     assert(Hessian_.rows() == Hessian_.cols() && "Hessian is not square");
-    // TODO:: 这里不应该减去一个，数值的反复加减容易造成数值精度出问题？而应该保存叠加lambda前的值，在这里直接赋值
+    // TODO:: Should not subtract one here, repeated addition and subtraction can cause numerical precision issues. Instead, should save the value before adding lambda and directly assign it here.
     for (ulong i = 0; i < size; ++i)
     {
         Hessian_(i, i) -= currentLambda_;
@@ -640,7 +640,7 @@ bool Problem::IsGoodStepInLM()
     tempChi *= 0.5; // 1/2 * err^2
 
     double rho = (currentChi_ - tempChi) / scale;
-    if (rho > 0 && isfinite(tempChi)) // last step was good, 误差在下降
+    if (rho > 0 && isfinite(tempChi)) // last step was good, error is decreasing
     {
         double alpha = 1. - pow((2 * rho - 1), 3);
         alpha = std::min(alpha, 2. / 3.);
@@ -698,19 +698,19 @@ VecX Problem::PCGSolver(const MatXX &A, const VecX &b, int maxIter = -1)
 }
 
 /*
- *  marg 所有和 frame 相连的 edge: imu factor, projection factor
- *  如果某个landmark和该frame相连，但是又不想加入marg, 那就把改edge先去掉
+ *  Marginalize all edges connected to frame: imu factor, projection factor
+ *  If a landmark is connected to this frame but you don't want to add it to marginalization, remove that edge first
  *
  */
 bool Problem::Marginalize(const std::vector<std::shared_ptr<Vertex>> margVertexs, int pose_dim)
 {
 
     SetOrdering();
-    /// 找到需要 marg 的 edge, margVertexs[0] is frame, its edge contained pre-intergration
+    /// Find the edges that need to be marginalized, margVertexs[0] is frame, its edge contained pre-integration
     std::vector<shared_ptr<Edge>> marg_edges = GetConnectedEdges(margVertexs[0]);
 
     std::unordered_map<int, shared_ptr<Vertex>> margLandmark;
-    // 构建 Hessian 的时候 pose 的顺序不变，landmark的顺序要重新设定
+    // When constructing Hessian, pose order remains unchanged, landmark order needs to be reassigned
     int marg_landmark_size = 0;
     //    std::cout << "\n marg edge 1st id: "<< marg_edges.front()->Id() << " end id: "<<marg_edges.back()->Id()<<std::endl;
     for (size_t i = 0; i < marg_edges.size(); ++i)
@@ -729,7 +729,7 @@ bool Problem::Marginalize(const std::vector<std::shared_ptr<Vertex>> margVertexs
     }
     //    std::cout << "pose dim: " << pose_dim <<std::endl;
     int cols = pose_dim + marg_landmark_size;
-    /// 构建误差 H 矩阵 H = H_marg + H_pp_prior
+    /// Construct error H matrix H = H_marg + H_pp_prior
     MatXX H_marg(MatXX::Zero(cols, cols));
     VecX b_marg(VecX::Zero(cols));
     int ii = 0;
@@ -763,11 +763,11 @@ bool Problem::Marginalize(const std::vector<std::shared_ptr<Vertex>> margVertexs
                 MatXX hessian = jacobian_i.transpose() * robustInfo * jacobian_j;
 
                 assert(hessian.rows() == v_i->LocalDimension() && hessian.cols() == v_j->LocalDimension());
-                // 所有的信息矩阵叠加起来
+                // Sum up all information matrices
                 H_marg.block(index_i, index_j, dim_i, dim_j) += hessian;
                 if (j != i)
                 {
-                    // 对称的下三角
+                    // Symmetric lower triangle
                     H_marg.block(index_j, index_i, dim_j, dim_i) += hessian.transpose();
                 }
             }
@@ -787,7 +787,7 @@ bool Problem::Marginalize(const std::vector<std::shared_ptr<Vertex>> margVertexs
         VecX bpp = b_marg.segment(0, reserve_size);
         VecX bmm = b_marg.segment(reserve_size, marg_size);
 
-        // Hmm 是对角线矩阵，它的求逆可以直接为对角线块分别求逆，如果是逆深度，对角线块为1维的，则直接为对角线的倒数，这里可以加速
+        // Hmm is a diagonal matrix. Its inverse can be computed directly by inverting diagonal blocks separately. If it's inverse depth, the diagonal block is 1D, then it's directly the reciprocal of the diagonal. This can be accelerated here.
         MatXX Hmm_inv(MatXX::Zero(marg_size, marg_size));
         // TODO:: use openMP
         for (auto iter : margLandmark)
@@ -814,7 +814,7 @@ bool Problem::Marginalize(const std::vector<std::shared_ptr<Vertex>> margVertexs
     /// marg frame and speedbias
     int marg_dim = 0;
 
-    // index 大的先移动
+    // Move larger indices first
     for (int k = margVertexs.size() - 1; k >= 0; --k)
     {
 
@@ -822,14 +822,14 @@ bool Problem::Marginalize(const std::vector<std::shared_ptr<Vertex>> margVertexs
         int dim = margVertexs[k]->LocalDimension();
         //        std::cout << k << " "<<idx << std::endl;
         marg_dim += dim;
-        // move the marg pose to the Hmm bottown right
-        // 将 row i 移动矩阵最下面
+        // move the marg pose to the Hmm bottom right
+        // Move row i to the bottom of the matrix
         Eigen::MatrixXd temp_rows = H_marg.block(idx, 0, dim, reserve_size);
         Eigen::MatrixXd temp_botRows = H_marg.block(idx + dim, 0, reserve_size - idx - dim, reserve_size);
         H_marg.block(idx, 0, reserve_size - idx - dim, reserve_size) = temp_botRows;
         H_marg.block(reserve_size - dim, 0, dim, reserve_size) = temp_rows;
 
-        // 将 col i 移动矩阵最右边
+        // Move col i to the rightmost side of the matrix
         Eigen::MatrixXd temp_cols = H_marg.block(0, idx, reserve_size, dim);
         Eigen::MatrixXd temp_rightCols = H_marg.block(0, idx + dim, reserve_size, reserve_size - idx - dim);
         H_marg.block(0, idx, reserve_size, reserve_size - idx - dim) = temp_rightCols;

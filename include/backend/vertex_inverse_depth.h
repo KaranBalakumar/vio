@@ -7,7 +7,7 @@ namespace myslam {
 namespace backend {
 
 /**
- * 以逆深度形式存储的顶点
+ * Vertex stored in inverse depth form
  */
 class VertexInverseDepth : public Vertex {
 public:

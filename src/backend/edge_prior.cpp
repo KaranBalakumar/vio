@@ -64,7 +64,7 @@ void EdgeSE3Prior::ComputeJacobians() {
     Sophus::SO3d ri(Qi);
     Sophus::SO3d rp(Qp_);
     Sophus::SO3d res_r = rp.inverse() * ri;
-    // http://rpg.ifi.uzh.ch/docs/RSS15_Forster.pdf  公式A.32
+    // http://rpg.ifi.uzh.ch/docs/RSS15_Forster.pdf  Formula A.32
     jacobian_pose_i.block<3,3>(0,3) = Sophus::SO3d::JacobianRInv(res_r.log());
 #else
     jacobian_pose_i.block<3,3>(0,3) = Qleft(Qp_.inverse() * Qi).bottomRightCorner<3, 3>();

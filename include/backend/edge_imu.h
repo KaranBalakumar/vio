@@ -13,7 +13,15 @@ namespace myslam {
 namespace backend {
 
 /**
- * 此边是IMU误差，此边为4元边，与之相连的顶点有：Pi Mi Pj Mj
+ * This edge is IMU error, this edge is a 4-ary edge, connected to vertices: Pi Mi Pj Mj
+ * Pi,Pj: pose vertices
+ * Mi,Mj: motion vertices
+ * error_j = (z_j - z_hat)
+ * z_hat = model()
+ * where z_j is the IMU measurement, z_hat is the predicted value based on optimization variable x_i
+ * References: ForsterIROS15, ForsterTRO16
+ * Due to many constraints, this follows the paper with approximations, but basically consistent
+ */
  */
 class EdgeImu : public Edge {
 public:
@@ -32,13 +40,13 @@ public:
 //        }
     }
 
-    /// 返回边的类型信息
+    /// Return edge type information
     virtual std::string TypeInfo() const override { return "EdgeImu"; }
 
-    /// 计算残差
+    /// Compute residual
     virtual void ComputeResidual() override;
 
-    /// 计算雅可比
+    /// Compute Jacobian
     virtual void ComputeJacobians() override;
 
 //    static void SetGravity(const Vec3 &g) {

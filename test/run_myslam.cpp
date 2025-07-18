@@ -47,7 +47,7 @@ void PubImuData()
 
 	double lastTime;
 
-	while (std::getline(fsImu, sImu_line) && !sImu_line.empty()) // read imu data　every line
+	while (std::getline(fsImu, sImu_line) && !sImu_line.empty()) // read imu data every line
 	{
 		std::istringstream ssImuData(sImu_line);
 		ssImuData >> dStampNSec >> vGyr.x() >> vGyr.y() >> vGyr.z() >> vAcc.x() >> vAcc.y() >> vAcc.z();
@@ -162,7 +162,7 @@ void PubImageData()
 		featuresImage.close();
 		lastTime = dStampNSec;
 		lastfeaturePoint = featurePoint;
-		pSystem->PubFeatureData(dStampNSec, feature_id, featurePoint, observation_feature, featureVelocity); //带时间戳的feature point数据载入系统，
+		pSystem->PubFeatureData(dStampNSec, feature_id, featurePoint, observation_feature, featureVelocity); // Load feature point data with timestamp into system
 
 		// Whether to visualize the tracking process
 		if (1)

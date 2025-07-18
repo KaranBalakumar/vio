@@ -18,7 +18,7 @@ namespace backend {
      * rho[1]: First derivative of the scaling function
      * rho[2]: Second derivative of the scaling function
      *
-     * LossFunction是各核函数的基类，它可以派生出各种Loss
+     * LossFunction is the base class for various kernel functions, from which various Loss functions can be derived
      */
     class LossFunction {
     public:
@@ -31,8 +31,8 @@ namespace backend {
     };
 
     /**
-     * 平凡的Loss，不作任何处理
-     * 使用nullptr作为loss function时效果相同
+     * Trivial Loss, performs no processing
+     * Same effect as using nullptr as loss function
      *
      * TrivalLoss(e) = e^2
      */

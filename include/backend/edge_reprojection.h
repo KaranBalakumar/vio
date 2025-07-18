@@ -13,10 +13,10 @@ namespace myslam {
 namespace backend {
 
 /**
- * 此边是视觉重投影误差，此边为三元边，与之相连的顶点有：
- * 路标点的逆深度InveseDepth、第一次观测到该路标点的source Camera的位姿T_World_From_Body1，
- * 和观测到该路标点的mearsurement Camera位姿T_World_From_Body2。
- * 注意：verticies_顶点顺序必须为InveseDepth、T_World_From_Body1、T_World_From_Body2。
+ * This edge is visual reprojection error, this edge is a ternary edge, connected to vertices:
+ * InverseDepth of landmark point, source Camera pose T_World_From_Body1 that first observed the landmark point,
+ * and measurement Camera pose T_World_From_Body2 that observed the landmark point.
+ * Note: vertices_ vertex order must be InverseDepth, T_World_From_Body1, T_World_From_Body2.
  */
 class EdgeReprojection : public Edge {
 public:
@@ -28,13 +28,13 @@ public:
         pts_j_ = pts_j;
     }
 
-    /// 返回边的类型信息
+    /// Return edge type information
     virtual std::string TypeInfo() const override { return "EdgeReprojection"; }
 
-    /// 计算残差
+    /// Compute residual
     virtual void ComputeResidual() override;
 
-    /// 计算雅可比
+    /// Compute Jacobian
     virtual void ComputeJacobians() override;
 
 //    void SetTranslationImuFromCamera(Eigen::Quaterniond &qic_, Vec3 &tic_);
@@ -49,9 +49,9 @@ private:
 };
 
 /**
-* 此边是视觉重投影误差，此边为二元边，与之相连的顶点有：
-* 路标点的世界坐标系XYZ、观测到该路标点的 Camera 的位姿T_World_From_Body1
-* 注意：verticies_顶点顺序必须为 XYZ、T_World_From_Body1。
+* This edge is visual reprojection error, this edge is a binary edge, connected to vertices:
+* World coordinate system XYZ of landmark point, Camera pose T_World_From_Body1 that observed the landmark point
+* Note: vertices_ vertex order must be XYZ, T_World_From_Body1.
 */
 class EdgeReprojectionXYZ : public Edge {
 public:
@@ -62,13 +62,13 @@ public:
         obs_ = pts_i;
     }
 
-    /// 返回边的类型信息
+    /// Return edge type information
     virtual std::string TypeInfo() const override { return "EdgeReprojectionXYZ"; }
 
-    /// 计算残差
+    /// Compute residual
     virtual void ComputeResidual() override;
 
-    /// 计算雅可比
+    /// Compute Jacobian
     virtual void ComputeJacobians() override;
 
     void SetTranslationImuFromCamera(Eigen::Quaterniond &qic_, Vec3 &tic_);
@@ -83,7 +83,7 @@ private:
 };
 
 /**
- * 仅计算重投影pose的例子
+ * Example of only computing reprojection pose
  */
 class EdgeReprojectionPoseOnly : public Edge {
 public:
@@ -93,13 +93,13 @@ public:
         Edge(2, 1, std::vector<std::string>{"VertexPose"}),
         landmark_world_(landmark_world), K_(K) {}
 
-    /// 返回边的类型信息
+    /// Return edge type information
     virtual std::string TypeInfo() const override { return "EdgeReprojectionPoseOnly"; }
 
-    /// 计算残差
+    /// Compute residual
     virtual void ComputeResidual() override;
 
-    /// 计算雅可比
+    /// Compute Jacobian
     virtual void ComputeJacobians() override;
 
 private:

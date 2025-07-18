@@ -20,8 +20,8 @@ public:
 
     VertexPose() : Vertex(7, 6) {}
 
-    /// 加法，可重定义
-    /// 默认是向量加
+    /// Addition operation, can be redefined
+    /// Default is vector addition
     virtual void Plus(const VecX &delta) override;
 
     std::string TypeInfo() const {
@@ -29,17 +29,17 @@ public:
     }
 
     /**
-     * 需要维护[H|b]矩阵中的如下数据块
-     * p: pose, m:mappoint
+     * Need to maintain the following data blocks in the [H|b] matrix
+     * p: pose, m: mappoint
      * 
      *     Hp1_p2    
      *     Hp2_p2    Hp2_m1    Hp2_m2    Hp2_m3     |    bp2
      *                         
      *                         Hm2_m2               |    bm2
      *                                   Hm2_m3     |    bm3
-     * 1. 若该Camera为source camera，则维护vHessionSourceCamera；
-     * 2. 若该Camera为measurement camera, 则维护vHessionMeasurementCamera；
-     * 3. 并一直维护m_HessionDiagonal；
+     * 1. If this camera is the source camera, maintain vHessionSourceCamera;
+     * 2. If this camera is the measurement camera, maintain vHessionMeasurementCamera;
+     * 3. Always maintain m_HessionDiagonal;
      */
 };
 

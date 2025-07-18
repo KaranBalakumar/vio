@@ -18,7 +18,7 @@ namespace myslam {
 namespace backend {
 
 /**
-* EdgeSE3Prior，此边为 1 元边，与之相连的顶点有：Ti
+* EdgeSE3Prior, this edge is a unary edge, connected to vertex: Ti
 */
 class EdgeSE3Prior : public Edge {
 public:
@@ -28,13 +28,13 @@ public:
             Edge(6, 1, std::vector<std::string>{"VertexPose"}),
             Pp_(p), Qp_(q) {}
 
-    /// 返回边的类型信息
+    /// Return edge type information
     virtual std::string TypeInfo() const override { return "EdgeSE3Prior"; }
 
-    /// 计算残差
+    /// Compute residual
     virtual void ComputeResidual() override;
 
-    /// 计算雅可比
+    /// Compute Jacobian
     virtual void ComputeJacobians() override;
 
 
